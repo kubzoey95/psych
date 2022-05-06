@@ -1,6 +1,14 @@
-import http from 'https://unpkg.com/isomorphic-git@beta/http/web/index.js'
-const fs = new LightningFS('fs')
+async function sha256(message) {
+    // encode as UTF-8
+    const msgBuffer = new TextEncoder().encode(message);                    
 
-const dir = '/test-clone'
-git.clone({ fs, http, dir, url: 'https://github.com/kubzoey95/psych', force: true}).then(console.log)
-console.log(fs.readdir(dir))
+    // hash the message
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+
+    // convert ArrayBuffer to Array
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+    // convert bytes to hex string                  
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
