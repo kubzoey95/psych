@@ -3,3 +3,4 @@ const fs = new LightningFS('fs')
 
 const dir = '/test-clone'
 git.clone({ fs, http, dir, url: 'https://github.com/kubzoey95/psych', force: true}).then(console.log)
+console.log(fs.readdir(dir))
