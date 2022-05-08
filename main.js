@@ -1,14 +1,14 @@
-async function sha256(message) {
-    // encode as UTF-8
-    const msgBuffer = new TextEncoder().encode(message);                    
+let key = CryptoJS.SHA3(prompt("Password please"), { outputLength: 512 });
 
-    // hash the message
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+console.log(key.toString())
+// let encrypted = CryptoJS.AES.encrypt("", key.toString(), {iv: CryptoJS.lib.WordArray.random(128 / 8)});
+// console.log(encrypted.toString())
+let token = null
 
-    // convert ArrayBuffer to Array
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
+await jQuery.get('https://raw.githubusercontent.com/kubzoey95/psych/master/token', function(data) {
+    token = data
+});
 
-    // convert bytes to hex string                  
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
-}
+let decrypted = CryptoJS.AES.decrypt(token, key.toString());
+
+console.log(decrypted.toString(CryptoJS.enc.Utf8))
