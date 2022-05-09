@@ -3,13 +3,20 @@ import { Octokit, App } from "https://cdn.skypack.dev/octokit";
 let key = CryptoJS.SHA3(prompt("Password please"), { outputLength: 512 });
 
 console.log(key.toString())
-// let encrypted = CryptoJS.AES.encrypt("", key.toString(), {iv: CryptoJS.lib.WordArray.random(128 / 8)});
-// console.log(encrypted.toString())
+
 let token = null
 
 await jQuery.get('https://raw.githubusercontent.com/kubzoey95/psych/master/token', function(data) {
     token = data
 });
+
+let data_enc = null
+
+await jQuery.get('https://raw.githubusercontent.com/kubzoey95/psych/master/data.json', function(data) {
+    data_enc = data
+});
+
+console.log(CryptoJS.AES.decrypt(data_enc, key.toString()).toString(CryptoJS.enc.Utf8))
 
 let decrypted = CryptoJS.AES.decrypt(token, key.toString());
 
@@ -35,6 +42,9 @@ let tree = await octokit.request('GET /repos/{owner}/{repo}/git/commits/{commit_
 
 console.log(tree)
 
+// let encrypted = CryptoJS.AES.encrypt("", key.toString(), {iv: CryptoJS.lib.WordArray.random(128 / 8)});
+// console.log(encrypted.toString())
+
 let new_tree = await octokit.request('POST /repos/{owner}/{repo}/git/trees', {
   owner: 'kubzoey95',
   repo: 'psych',
@@ -44,7 +54,7 @@ let new_tree = await octokit.request('POST /repos/{owner}/{repo}/git/trees', {
       path: 'data.json',
       mode: '100644',
       type: 'blob',
-      content: '{"a": "b"}'
+      content: CryptoJS.AES.encrypt(`{"date": "${new Date().toISOString()}"}`, key.toString(), {iv: CryptoJS.lib.WordArray.random(128 / 8)}).toString()
     }
   ]
 })
@@ -57,20 +67,19 @@ let commit = await octokit.request('POST /repos/{owner}/{repo}/git/commits', {
   author: {
     name: 'Webpage',
     email: 'webpage@beifbgy.com',
-    date: '2008-07-09T16:13:30+12:00'
+    date: new Date().toISOString()
   },
   parents: [
     ref.data.object.sha
   ],
   tree: new_tree.data.sha,
 })
-
 let new_ref = await octokit.request('PATCH /repos/{owner}/{repo}/git/refs/{ref}', {
   owner: 'kubzoey95',
   repo: 'psych',
   ref: 'heads/master',
   sha: commit.data.sha,
-//   force: true
+  force: true
 })
 
 console.log(decrypted)
